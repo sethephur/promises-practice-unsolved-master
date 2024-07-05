@@ -1,17 +1,60 @@
 export const getFirstResolvedPromise = (promises) => {
   //*  write code to pass test ⬇ ️
+  return new Promise((resolve, reject) => {
+    let rejectedCount = 0;
+    const totalPromises = promises.length;
+
+    promises.forEach((promise) => {
+      promise.then(resolve).catch(() => {
+        rejectedCount++;
+        if (rejectedCount === totalPromises) {
+          reject(new Error("All promises were rejected"));
+        }
+      });
+    });
+  });
 };
 
 export const getFirstPromiseOrFail = (promises) => {
   //*  write code to pass test ⬇ ️
+  return new Promise((resolve, reject) => {
+    let resolved = false;
+    let rejectionErrors = [];
+    const totalPromises = promises.length;
+
+    promises.forEach((promise) => {
+      promise
+        .then((result) => {
+          if (!resolved) {
+            resolved = true;
+            resolve(result);
+          }
+        })
+        .catch((error) => {
+          rejectionErrors.push(error);
+          if (rejectionErrors.length === totalPromises) {
+            reject(new Error("All promises were rejected"));
+          } else if (!resolved) {
+            reject(error);
+          }
+        });
+    });
+  });
 };
 
 export const getQuantityOfRejectedPromises = (promises) => {
   //*  write code to pass test ⬇ ️
+  return Promise.allSettled(promises).then(
+    (results) => results.filter((result) => result.status === "rejected").length
+  );
 };
 
 export const getQuantityOfFulfilledPromises = (promises) => {
   //*  write code to pass test ⬇ ️
+  return Promise.allSettled(promises).then(
+    (results) =>
+      results.filter((result) => result.status === "fulfilled").length
+  );
 };
 
 //!  ⬇ ⬇ ⬇ ⬇ Don't Edit This Array ⬇ ⬇ ⬇ ⬇
@@ -45,4 +88,10 @@ export const fetchAllCharactersByIds = async (ids) => {
   // To solve this you must fetch all characters passed in the array at the same time
   // use the `fetchCharacterById` function above to make this work
   //*  write code to pass test ⬇ ️
+  const promises = ids.map((id) => fetchCharacterById(id).catch(() => null));
+  const results = await Promise.all(promises);
+  if (results.includes(null)) {
+    return [];
+  }
+  return results;
 };
